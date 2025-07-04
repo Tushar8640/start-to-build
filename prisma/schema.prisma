@@ -1,0 +1,77 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id           Int       @id @default(autoincrement())
+  email        String    @unique
+  password     String?
+  name         String?
+  image        String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  conversations ConversationParticipant[]
+  messages     Message[]
+  seenMessages SeenMessage[]
+}
+
+
+model Conversation {
+  id           Int                       @id @default(autoincrement())
+  title        String?
+  isGroup      Boolean                   @default(false)
+  createdAt    DateTime                  @default(now())
+  updatedAt    DateTime                  @updatedAt
+  participants ConversationParticipant[]
+  messages     Message[]
+}
+
+model ConversationParticipant {
+  id             Int          @id @default(autoincrement())
+  userId         Int
+  conversationId Int
+  createdAt      DateTime     @default(now())
+
+  user         User         @relation(fields: [userId], references: [id])
+  conversation Conversation @relation(fields: [conversationId], references: [id])
+
+  @@unique([userId, conversationId])
+}
+
+model Message {
+  id             Int          @id @default(autoincrement())
+  content        String
+  image          String?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  isDeleted      Boolean      @default(false)
+  editedAt       DateTime?
+
+  senderId       Int
+  conversationId Int
+  replyToId      Int?
+
+  sender         User         @relation(fields: [senderId], references: [id])
+  conversation   Conversation @relation(fields: [conversationId], references: [id])
+  replyTo        Message?     @relation("MessageReplies", fields: [replyToId], references: [id])
+  replies        Message[]    @relation("MessageReplies")
+  seenBy         SeenMessage[]
+}
+
+model SeenMessage {
+  id         Int      @id @default(autoincrement())
+  userId     Int
+  messageId  Int
+  seenAt     DateTime @default(now())
+
+  user       User     @relation(fields: [userId], references: [id])
+  message    Message  @relation(fields: [messageId], references: [id])
+
+  @@unique([userId, messageId])
+}

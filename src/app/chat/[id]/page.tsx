@@ -166,20 +166,52 @@ export default function ChatApp() {
   // const [selectedChat, setSelectedChat] = useState<Chat>(chats[1])
   const [searchQuery, setSearchQuery] = useState("")
   const [messageInput, setMessageInput] = useState("")
+  const [messages, setMessages] = useState<Message[]>([])
+  const [loading, setLoading] = useState(false)
+  const [conversationId, setConversationId] = useState("")
   pusherClient.subscribe('chat');
   const filteredChats = chats.filter((chat) => chat.name.toLowerCase().includes(searchQuery.toLowerCase()))
 
   const params = useParams(); // ✅ Works in App Router
   const chatId = params?.id as string; // from `/chat/[chatId]`
 
-
-  const handleSendMessage = async () => {
-    if (messageInput.trim()) {
-      await sendMessage(messageInput)
-      console.log("Sending message:", messageInput)
-      setMessageInput("")
+  const fetchMessages = async () => {
+    try {
+      setLoading(true)
+      const res = await fetch(`/api/chat/get-messages?conversationId=${conversationId}`)
+      if (!res.ok) throw new Error('Failed to fetch messages')
+      const data = await res.json()
+      setMessages(data)
+      console.log(data)
+    } catch (err) {
+      console.error("Error fetching messages:", err)
+    } finally {
+      setLoading(false)
     }
   }
+
+  // Fetch on component mount and when conversation changes
+  useEffect(() => {
+    if (conversationId) {
+      fetchMessages()
+    }
+  }, [conversationId])
+
+const handleSendMessage = async () => {
+  if (!messageInput.trim() || !conversationId || !currentUserId) return;
+
+  try {
+    await sendMessage({
+      content: messageInput,
+      conversationId: conversationId,
+      senderId: currentUserId,
+    });
+    setMessageInput("");
+  } catch (error) {
+    // Show error to user
+    setError("Failed to send message");
+  }
+};
 
   const selectedChat = chats.find((chat) => chat.id === chatId)
 

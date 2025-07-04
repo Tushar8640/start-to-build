@@ -9,18 +9,11 @@ import { Badge } from "@/components/ui/badge"
 import {
     Search,
     Plus,
-    Video,
-    Phone,
-    MoreHorizontal,
-    Paperclip,
-    Smile,
-    Mic,
-    Send,
     Check,
-    CheckCheck,
 } from "lucide-react"
 import { pusherClient } from "@/lib/pusher"
 import { useRouter } from "next/navigation"
+import LogoutButton from "../(auth)/logout-button"
 
 interface Chat {
     id: string
@@ -189,6 +182,7 @@ export default function ChatApp({
     return (
         <div className="h-screen min-w-5xl max-w-7xl mx-auto -lg py-5 flex justify-center items-center">
             {/* Sidebar */}
+            <LogoutButton />
             <div className="border rounded w-full flex">
                 <div className="w-80 bg-white border-r border-gray-200 flex flex-col">
                     {/* Header */}
